@@ -8,7 +8,7 @@ def grow(population: List[Deer]):
         deer.age += 1
 
 
-def reproduce(population: List[Deer], params):
+def reproduce(population: List[Deer], params: ModelParameters):
     newDeer = []
 
     hasMale = any([deer.isMale and deer.age >= 1 for deer in population])
@@ -37,11 +37,13 @@ def reproduce(population: List[Deer], params):
     return population + newDeer
 
 
-def naturalDeath(population: List[Deer], params):
+def naturalDeath(population: List[Deer], params: ModelParameters):
     pass
 
 
-def hunting(population: List[Deer], params):
+def hunting(population: List[Deer],
+            params: ModelParameters, 
+            huntingStrategy: HuntingParameters):
     pass
 
 

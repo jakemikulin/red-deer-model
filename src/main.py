@@ -56,6 +56,9 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
     
     return survivors
 
+    
+    return survivors
+
 
 
 def hunting(population: List[Deer],

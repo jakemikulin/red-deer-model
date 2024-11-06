@@ -68,6 +68,10 @@ class ModelParameters():
             huntingLimit: int,
             initialIndividuals: int,
             maximumIndividuals: int
+            calfMortalityRate: float,       # Mortality rate for age < 1
+            youngMortalityRate: float,      # Mortality rate for 1 <= age < 5
+            matureMortalityRate: float,     # Mortality rate for 5 <= age < 12
+            oldMortalityRate: float         # Mortality rate for age >= 12
                  ):
         self.sampleSpace = sampleSpace,                 # S
         self.maxCapacityImpact = maxCapacityImpact,     # c
@@ -75,6 +79,10 @@ class ModelParameters():
         self.huntingLimit = huntingLimit,               # l
         self.initialIndividuals = initialIndividuals,   # i_init
         self.maximumIndividuals = maximumIndividuals    # i_max
+        self.calfMortalityRate = calfMortalityRate
+        self.youngMortalityRate = youngMortalityRate
+        self.matureMortalityRate = matureMortalityRate
+        self.oldMortalityRate = oldMortalityRate
        
 
 class HuntingParameters():

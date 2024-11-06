@@ -38,7 +38,23 @@ def reproduce(population: List[Deer], params: ModelParameters):
 
 
 def naturalDeath(population: List[Deer], params: ModelParameters):
-    pass
+    survivors = []
+    for deer in population:
+        # Define mortality rates by age category 
+        if deer.age < 1:
+            mortality_rate = 0.2  # High mortality for calves
+        elif 1 <= deer.age < 5:
+            mortality_rate = 0.05  # Lower mortality for young deer
+        elif 5 <= deer.age < 12:
+            mortality_rate = 0.1  # Slightly higher for mature adults
+        else:
+            mortality_rate = 0.4  # High mortality for older deer
+        
+        # Determine if the deer survives based on mortality rate
+        if random() > mortality_rate:
+            survivors.append(deer)
+    
+    return survivors
 
 
 def hunting(population: List[Deer],

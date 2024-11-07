@@ -38,7 +38,22 @@ def reproduce(population: List[Deer], params: ModelParameters):
 
 
 def naturalDeath(population: List[Deer], params: ModelParameters):
-    pass
+    def naturalDeath(population: List[Deer], params: ModelParameters):
+    survivors = []
+    for deer in population:
+        # Determine mortality rate based on the age of the deer
+        if deer.age == 0:
+            mortality_rate = params.calfMortalityRate  # p_i,d for age 0
+        elif 0 < deer.age < 16:
+            mortality_rate = params.youngMortalityRate  # p_i,d for age 1 to 15
+        else:
+            mortality_rate = params.oldMortalityRate  # p_i,d for age 16 and older
+        
+        # Check if deer survives or dies based on mortality rate
+        if random() >= mortality_rate:
+            survivors.append(deer)  # Deer survives if random number >= mortality_rate
+    
+    return survivors
 
 
 def hunting(population: List[Deer],
@@ -57,7 +72,7 @@ class Deer():
         self.age = age,           # i_a
         self.isFemale = isFemale, # i_f
         self.isMale = isMale,     # i_m
-
+    
 
 class ModelParameters():
     def __init__(
@@ -68,6 +83,9 @@ class ModelParameters():
             huntingLimit: int,
             initialIndividuals: int,
             maximumIndividuals: int
+            mortalityRateAge0: float,         # Mortality rate for age 0
+            mortalityRateAge1to15: float,     # Mortality rate for ages 1 to 15
+            mortalityRateAge16Plus: float     # Mortality rate for age 16 and above
                  ):
         self.sampleSpace = sampleSpace,                 # S
         self.maxCapacityImpact = maxCapacityImpact,     # c
@@ -75,6 +93,9 @@ class ModelParameters():
         self.huntingLimit = huntingLimit,               # l
         self.initialIndividuals = initialIndividuals,   # i_init
         self.maximumIndividuals = maximumIndividuals    # i_max
+        self.mortalityRateAge0 = mortalityRateAge0
+        self.mortalityRateAge1to15 = mortalityRateAge1to15
+        self.mortalityRateAge16Plus = mortalityRateAge16Plus
        
 
 class HuntingParameters():

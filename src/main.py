@@ -1,6 +1,6 @@
 from typing import List
 from random import random
-
+from math import tanh
 
 
 def grow(population: List[Deer]):
@@ -36,15 +36,43 @@ def reproduce(population: List[Deer], params: ModelParameters):
 
     return population + newDeer
 
+def adjustMortalityRate(base_mortality: float, max_cap_impact: float, cap_curve_slope: float, population: int, max_carryingcap: int) -> float:
+    # Adjust the mortality rate based on carrying capacity
+    adjustment = (max_cap_impact / 2) * (1 + tanh(cap_curve_slope * (population -  max_carryingcap)))
+    return base_mortality + adjustment
 
 def naturalDeath(population: List[Deer], params: ModelParameters):
     pass
 
 
-def hunting(population: List[Deer],
-            params: ModelParameters, 
-            huntingStrategy: HuntingParameters):
-    pass
+def naturalDeath(population: List[Deer], params: ModelParameters):
+    survivors = []
+    inow = len(population)  # Current population size
+    imax = params.maximumIndividuals  # Maximum carrying capacity
+
+    for deer in population:
+        # Determine base mortality rate based on age
+        if deer.age == 0:
+            base_mortality = 0.2  # Base mortality rate for age 0
+        elif 0 < deer.age < 16:
+            base_mortality = 0.05  # Base mortality rate for ages 1 to 15
+        else:
+            base_mortality = 0.4  # Base mortality rate for age 16 and above
+        
+        # Adjust mortality rate based on carrying capacity
+        adjusted_mortality = adjustMortalityRate(
+            base_mortality,
+            params.maxCapacityImpact,
+            params.capacityCurveSlope,
+            inow,
+            imax
+        )
+        
+        # Determine if the deer survives
+        if random() >= adjusted_mortality:
+            survivors.append(deer)  # Deer survives if random number >= adjusted mortality
+    
+    return survivors
 
 
 class Deer():

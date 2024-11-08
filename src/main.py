@@ -35,6 +35,17 @@ def reproduce(population: List[Deer], params: ModelParameters):
                 newDeer.append(Deer(0, not male, male))
 
     return population + newDeer
+def calculateAgeBasedMortality(age: int) -> float:
+  
+\\Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
+
+    if age == 0:
+        return 0.15
+    elif 0 < age < 16:
+        return 0.03 + (0.05 / 14) * (age - 1)
+    else:  # age >= 16
+        return 0.08 * exp(2.47 * (age - 16))
+
 
 def adjustMortalityRate(base_mortality: float, max_cap_impact: float, cap_curve_slope: float, inow: int, imax: int) -> float:
     # Adjust the mortality rate based on carrying capacity
@@ -42,24 +53,15 @@ def adjustMortalityRate(base_mortality: float, max_cap_impact: float, cap_curve_
     return base_mortality + adjustment
 
 def naturalDeath(population: List[Deer], params: ModelParameters):
-    pass
-
-
-def naturalDeath(population: List[Deer], params: ModelParameters):
     survivors = []
     inow = len(population)  # Current population size
     imax = params.maximumIndividuals  # Maximum carrying capacity
-
+    
     for deer in population:
-        # Determine base mortality rate based on age
-       if deer.age == 0:
-            base_mortality = params.mortalityRateAge0
-        elif 0 < deer.age < 16:
-            base_mortality = params.mortalityRateAge1to15
-        else:
-            base_mortality = params.mortalityRateAgeOver16
-        
-        # Adjust mortality rate based on carrying capacity
+        # Step 1: Calculate the age-based mortality rate using the provided formula
+        base_mortality = calculateAgeBasedMortality(deer.age)
+
+        # Step 2: Adjust mortality rate based on carrying capacity (Algorithm 3)
         adjusted_mortality = adjustMortalityRate(
             base_mortality,
             params.maxCapacityImpact,
@@ -68,7 +70,7 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
             imax
         )
         
-        # Determine if the deer survives
+        # Step 3: Determine if the deer survives based on adjusted mortality rate
         if random() >= adjusted_mortality:
             survivors.append(deer)  # Deer survives if random number >= adjusted mortality
     

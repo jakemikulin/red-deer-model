@@ -189,8 +189,23 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
     return survivors
 
 
+def generateInitialPopulation():
+    """
+    Creates the same population as in the paper (Figure 3.2)
+    """
 
+    stags = [5, 4, 3, 0, 4, 9, 0, 3, 3, 5, 1, 7, 0, 3, 3]
+    hinds = [9, 4, 2, 3, 5, 1, 2, 4, 1, 1, 3, 4, 2, 1, 6, 2]
 
+    population: List[Deer] = []
 
+    for age, count in enumerate(stags):
+        for _ in range(count):
+            population.append(Deer(age, False, True))
+    for age, count in enumerate(hinds):
+        for _ in range(count):
+            population.append(Deer(age, True, False))
+
+    return population
 def main():
     pass

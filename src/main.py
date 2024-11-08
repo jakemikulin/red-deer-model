@@ -37,7 +37,7 @@ def reproduce(population: List[Deer], params: ModelParameters):
     return population + newDeer
 def calculateAgeBasedMortality(age: int) -> float:
   
-\\Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
+  #Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
 
     if age == 0:
         return 0.15
@@ -98,9 +98,7 @@ class ModelParameters():
             huntingLimit: int,
             initialIndividuals: int,
             maximumIndividuals: int
-            mortalityRateAge0: float,
-            mortalityRateAge1to15: float, 
-            mortalityRateAgeOver16: float
+            
                  ):
         self.sampleSpace = sampleSpace,                 # S
         self.maxCapacityImpact = maxCapacityImpact,     # c
@@ -108,9 +106,7 @@ class ModelParameters():
         self.huntingLimit = huntingLimit,               # l
         self.initialIndividuals = initialIndividuals,   # i_init
         self.maximumIndividuals = maximumIndividuals    # i_max
-        self.mortalityRateAge0=mortalityRateAge0,
-        self.mortalityRateAge1to15= mortalityRateAge1to15,
-        self.mortalityRateAgeOver16=mortalityRateAgeOver16
+      
        
 
 class HuntingParameters():

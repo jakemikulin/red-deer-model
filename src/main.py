@@ -36,9 +36,9 @@ def reproduce(population: List[Deer], params: ModelParameters):
 
     return population + newDeer
 
-def adjustMortalityRate(base_mortality: float, max_cap_impact: float, cap_curve_slope: float, population: int, max_carryingcap: int) -> float:
+def adjustMortalityRate(base_mortality: float, max_cap_impact: float, cap_curve_slope: float, inow: int, imax: int) -> float:
     # Adjust the mortality rate based on carrying capacity
-    adjustment = (max_cap_impact / 2) * (1 + tanh(cap_curve_slope * (population -  max_carryingcap)))
+    adjustment = (max_cap_impact / 2) * (1 + tanh(cap_curve_slope * (inow - imax)))
     return base_mortality + adjustment
 
 def naturalDeath(population: List[Deer], params: ModelParameters):

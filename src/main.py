@@ -52,12 +52,12 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
 
     for deer in population:
         # Determine base mortality rate based on age
-        if deer.age == 0:
-            base_mortality = 0.2  # Base mortality rate for age 0
+       if deer.age == 0:
+            base_mortality = params.mortalityRateAge0
         elif 0 < deer.age < 16:
-            base_mortality = 0.05  # Base mortality rate for ages 1 to 15
+            base_mortality = params.mortalityRateAge1to15
         else:
-            base_mortality = 0.4  # Base mortality rate for age 16 and above
+            base_mortality = params.mortalityRateAgeOver16
         
         # Adjust mortality rate based on carrying capacity
         adjusted_mortality = adjustMortalityRate(
@@ -96,6 +96,9 @@ class ModelParameters():
             huntingLimit: int,
             initialIndividuals: int,
             maximumIndividuals: int
+            mortalityRateAge0: float,
+            mortalityRateAge1to15: float, 
+            mortalityRateAgeOver16: float
                  ):
         self.sampleSpace = sampleSpace,                 # S
         self.maxCapacityImpact = maxCapacityImpact,     # c
@@ -103,6 +106,9 @@ class ModelParameters():
         self.huntingLimit = huntingLimit,               # l
         self.initialIndividuals = initialIndividuals,   # i_init
         self.maximumIndividuals = maximumIndividuals    # i_max
+        self.mortalityRateAge0=mortalityRateAge0,
+        self.mortalityRateAge1to15= mortalityRateAge1to15,
+        self.mortalityRateAgeOver16=mortalityRateAgeOver16
        
 
 class HuntingParameters():

@@ -61,6 +61,7 @@ def grow(population: List[Deer]):
     for deer in population:
         deer.age += 1
 
+    return population
 
 def reproduce(population: List[Deer], params: ModelParameters):
     newDeer = []

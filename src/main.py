@@ -61,6 +61,7 @@ def grow(population: List[Deer]):
 
     return population
 
+
 def reproduce(population: List[Deer], params: ModelParameters):
     newDeer = []
 
@@ -194,6 +195,18 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
     return survivors
 
 
+def generate_random_list(size, total):
+    numbers = []
+    current_sum = 0
+    for _ in range(size - 1):
+        remaining = total - current_sum
+        value = random.randint(0, min(10, remaining))
+        numbers.append(value)
+        current_sum += value
+    numbers.append(total - current_sum)
+    return numbers
+
+
 def generateInitialPopulation():
     """
     Creates the same population as in the paper (Figure 3.2)
@@ -201,6 +214,9 @@ def generateInitialPopulation():
 
     stags = [5, 4, 3, 0, 4, 9, 0, 3, 3, 5, 1, 7, 0, 3, 3]
     hinds = [9, 4, 2, 3, 5, 1, 2, 4, 1, 1, 3, 4, 2, 1, 6, 2]
+
+    stags = generate_random_list(15, 100)
+    hinds = generate_random_list(15, 100)
 
     population: List[Deer] = []
 
@@ -212,5 +228,54 @@ def generateInitialPopulation():
             population.append(Deer(age, True, False))
 
     return population
+
+
+def runSimulation(
+    parameters: ModelParameters,
+    huntingStrategy: HuntingParameters,
+    samples=100,
+    years=100,
+):
+
+    population_df = pd.DataFrame(
+        columns=[
+            "iteration",
+            "year",
+            "num_individuals",
+            "num_stags",
+            "num_hinds",
+            "age_distribution",
+        ]
+    )
+
+    for i in range(samples):
+        population = generateInitialPopulation()
+        for t in range(years):
+            population = grow(population)
+            population = reproduce(population, parameters)
+            population = naturalDeath(population, parameters)
+            population = hunting(population, parameters, huntingStrategy)
+
+            num_individuals = len(population)
+            num_stags = sum(1 for individual in population if individual.isMale)
+            num_hinds = sum(1 for individual in population if individual.isFemale)
+            age_distribution = [individual.age for individual in population]
+
+            year_data = pd.DataFrame(
+                {
+                    "iteration": [i],
+                    "year": [t],
+                    "num_individuals": [num_individuals],
+                    "num_stags": [num_stags],
+                    "num_hinds": [num_hinds],
+                    "age_distribution": [age_distribution],
+                }
+            )
+
+            population_df = pd.concat([population_df, year_data], ignore_index=True)
+
+    return population_df
+
+
 def main():
     pass

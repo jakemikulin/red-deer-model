@@ -103,22 +103,28 @@ def calculateAgeBasedMortality(age: int) -> float:
         return 0.08 * exp(2.47 * (age - 16))
 
 
-def count_group(population, age=None, min_age=None, countMale=True, countFemale=False):
+def get_group(population, age=None, min_age=None, onlyMale=False, onlyFemale=False):
     if age is not None:
-        # Count individuals of a specific age
         return [
-            ind
-            for ind in population
-            if ind.age == age
-            and (ind.isMale == countMale or ind.isFemale == countFemale)
+            deer
+            for deer in population
+            if deer.age == age
+            and (
+                (onlyMale == onlyFemale)
+                or (deer.isMale and onlyMale)
+                or (deer.isFemale and onlyFemale)
+            )
         ]
     elif min_age is not None:
-        # Count individuals older than a certain age
         return [
-            ind
-            for ind in population
-            if ind.age > min_age
-            and (ind.isMale == countMale or ind.isFemale == countFemale)
+            deer
+            for deer in population
+            if deer.age > min_age
+            and (
+                (onlyMale == onlyFemale)
+                or (deer.isMale and onlyMale)
+                or (deer.isFemale and onlyFemale)
+            )
         ]
     return []
 
@@ -126,23 +132,23 @@ def count_group(population, age=None, min_age=None, countMale=True, countFemale=
 def hunting(
     population: List[Deer], params: ModelParameters, huntingStrategy: HuntingParameters
 ):
-    calves = count_group(population, age=0, countMale=True, countFemale=True)
+    calves = get_group(population, age=0, onlyMale=False, onlyFemale=False)
     if len(calves) > params.huntingLimit:
         calves = calves[huntingStrategy.calves :]
 
-    youngHinds = count_group(population, age=1, countMale=False, countFemale=True)
+    youngHinds = get_group(population, age=1, onlyMale=False, onlyFemale=True)
     if len(youngHinds) > params.huntingLimit:
         youngHinds = youngHinds[huntingStrategy.youngHinds :]
 
-    youngStags = count_group(population, age=1, countMale=True, countFemale=False)
+    youngStags = get_group(population, age=1, onlyMale=True, onlyFemale=False)
     if len(youngStags) > params.huntingLimit:
         youngStags = youngStags[huntingStrategy.youngStags :]
 
-    hinds = count_group(population, min_age=1, countMale=False, countFemale=True)
+    hinds = get_group(population, min_age=1, onlyMale=False, onlyFemale=True)
     if len(hinds) > params.huntingLimit:
         hinds = hinds[huntingStrategy.matureHinds :]
 
-    stags = count_group(population, min_age=1, countMale=True, countFemale=False)
+    stags = get_group(population, min_age=1, onlyMale=True, onlyFemale=False)
     if len(stags) > params.huntingLimit:
         stags = stags[huntingStrategy.matureStags :]
 

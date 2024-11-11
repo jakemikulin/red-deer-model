@@ -1,5 +1,5 @@
+import random
 from math import exp, tanh
-from random import random
 from typing import List
 
 import pandas as pd
@@ -20,14 +20,12 @@ class Deer:
 class ModelParameters:
     def __init__(
         self,
-        sampleSpace: int,
         maxCapacityImpact: float,
         capacityCurveSlope: float,
         huntingLimit: int,
         initialIndividuals: int,
         maximumIndividuals: int,
     ):
-        self.sampleSpace = sampleSpace  # S
         self.maxCapacityImpact = maxCapacityImpact  # c
         self.capacityCurveSlope = capacityCurveSlope  # a
         self.huntingLimit = huntingLimit  # l
@@ -68,7 +66,7 @@ def reproduce(population: List[Deer], params: ModelParameters):
 
     hasMale = any([deer.isMale and deer.age >= 1 for deer in population])
 
-    if hasMale:
+    if not hasMale:
         return population
 
     for deer in population:
@@ -76,16 +74,16 @@ def reproduce(population: List[Deer], params: ModelParameters):
             continue
 
         if deer.age == 1:
-            if random() < params.probYoungReproduce:
+            if random.random() < params.probYoungReproduce:
                 male = False
-                if random() < params.probMale:
+                if random.random() < params.probMale:
                     male = True
                 newDeer.append(Deer(0, not male, male))
 
         elif 1 < deer.age < 12:
-            if random() < params.probMatureReproduce:
+            if random.random() < params.probMatureReproduce:
                 male = False
-                if random() < params.probMale:
+                if random.random() < params.probMale:
                     male = True
                 newDeer.append(Deer(0, not male, male))
 
@@ -188,7 +186,7 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
         )
 
         # Step 3: Determine if the deer survives based on adjusted mortality rate
-        if random() >= adjusted_mortality:
+        if random.random() >= adjusted_mortality:
             survivors.append(
                 deer
             )  # Deer survives if random number >= adjusted mortality

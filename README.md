@@ -4,6 +4,8 @@ MoSS Coursework 2
 
 Blackmount Deer Management Group (updated 2019)
 
+-- Theses are estimated based off of two terrible graphs --
+
 Deer Count Figures (2005-2018) from Figure 2
 Year	Stags	Hinds	Calves	Total
 2005	2000	4100	4100	  10200

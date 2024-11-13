@@ -34,8 +34,8 @@ class ModelParameters:
 
         self.probMale = 0.52  # p_o,m
         self.probFemale = 0.48  # p_o,f
-        self.probYoungReproduce = 0.3  # Reproduction function, page 18
-        self.probMatureReproduce = 0.9  # Reproduction function, page 18
+        self.probYoungReproduce = 0.1  # Reproduction function, page 18 was 0.3
+        self.probMatureReproduce = 0.5  # Reproduction function, page 18 was 0.9
 
 
 class HuntingParameters:
@@ -50,7 +50,6 @@ class HuntingParameters:
             }
         """
         self.culling_data = culling_data
-
 
 
 def grow(population: List[Deer]):
@@ -94,11 +93,11 @@ def calculateAgeBasedMortality(age: int) -> float:
     # Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
 
     if age == 0:
-        return 0.15
+        return 0.06 # From Blackmount DMP
     elif 0 < age < 16:
-        return 0.03 + (0.05 / 14) * (age - 1)
+        return 0.04 + (0.03 / 14) * (age - 1) # 0.03 + (0.05 / 14) * (age - 1)
     else:  # age >= 16
-        return 0.08 * exp(2.47 * (age - 16))
+        return 0.06 * exp(2.0 * (age - 16)) # 0.08 * exp(2.47 * (age - 16))
     
 def adjustMortalityRate(
     base_mortality: float,
@@ -210,9 +209,9 @@ def generateInitialPopulation():
     total_hinds = 4100
     total_calves = 4100
 
-    # Generate age distributions for stags and hinds (ages 1-16)
-    stags_age_distribution = generate_random_list(16, total_stags)
-    hinds_age_distribution = generate_random_list(16, total_hinds)
+    # Generate age distributions for stags and hinds (ages 1-15)
+    stags_age_distribution = generate_random_list(15, total_stags)
+    hinds_age_distribution = generate_random_list(15, total_hinds)
 
     # Initialize the population list
     population: List[Deer] = []
@@ -230,6 +229,10 @@ def generateInitialPopulation():
     # Add calves with age 0 (assuming a roughly equal male/female distribution)
     population.extend([Deer(0, True, False) for _ in range(total_calves // 2)])
     population.extend([Deer(0, False, True) for _ in range(total_calves // 2)])
+
+    # Debug: Check that all non-calves are within age range 1-15
+    ages = [deer.age for deer in population if deer.age > 0]
+    print(f"Initial non-calf ages: Min={min(ages)}, Max={max(ages)}")
 
     return population
 

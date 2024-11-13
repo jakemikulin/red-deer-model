@@ -101,51 +101,55 @@ def calculateAgeBasedMortality(age: int) -> float:
         return 0.08 * exp(2.47 * (age - 16))
 
 
-def get_group(population, age=None, min_age=None, onlyMale=False, onlyFemale=False):
-    if age is not None:
-        return [
-            deer
-            for deer in population
-            if deer.age == age
-            and (
-                (onlyMale == onlyFemale)
-                or (deer.isMale and onlyMale)
-                or (deer.isFemale and onlyFemale)
-            )
-        ]
-    elif min_age is not None:
-        return [
-            deer
-            for deer in population
-            if deer.age > min_age
-            and (
-                (onlyMale == onlyFemale)
-                or (deer.isMale and onlyMale)
-                or (deer.isFemale and onlyFemale)
-            )
-        ]
-    return []
+def get_group(population: List[Deer], age: int = None, min_age: int = None, onlyMale: bool = False, onlyFemale: bool = False):
+    filtered_population = []
+
+    for deer in population:
+        # Filter by specific age, if provided
+        if age is not None and deer.age != age:
+            continue
+
+        # Filter by minimum age (inclusive), if provided
+        if min_age is not None and deer.age < min_age:
+            continue
+
+        # Filter by sex
+        if onlyMale and not deer.isMale:
+            continue
+        if onlyFemale and not deer.isFemale:
+            continue
+
+        # If all conditions match, include the deer
+        filtered_population.append(deer)
+
+    return filtered_population
 
 
-def hunting(population: List[Deer], year: int, huntingStrategy: HuntingParameters):
-    # Retrieve yearly cull numbers from hunting strategy
+def hunting(population: List[Deer], year: int, huntingStrategy: HuntingParameters, params: ModelParameters):
+    # Retrieve cull data for the current year
     year_cull = huntingStrategy.culling_data.get(year, {'calves': 0, 'matureHinds': 0, 'matureStags': 0})
-    
+
+    # Cull calves
     calves = get_group(population, age=0)
-    if len(calves) > year_cull['calves']:
-        calves = calves[year_cull['calves']:]
+    calf_cull_count = min(year_cull['calves'], len(calves))  # Ensure we don't remove more than exist
+    calves = calves[calf_cull_count:]  # Keep only the remaining portion after removing the cull count
 
+    # Cull hinds
     hinds = get_group(population, min_age=1, onlyFemale=True)
-    if len(hinds) > year_cull['hinds']:
-        hinds = hinds[year_cull['hinds']:]
+    hind_cull_count = min(year_cull['hinds'], len(hinds))
+    hinds = hinds[hind_cull_count:]  # Keep only the remaining portion after removing the cull count
 
+    # Cull stags
     stags = get_group(population, min_age=1, onlyMale=True)
-    if len(stags) > year_cull['stags']:
-        stags = stags[year_cull['stags']:]
+    stag_cull_count = min(year_cull['stags'], len(stags))
+    stags = stags[stag_cull_count:]  # Keep only the remaining portion after removing the cull count
 
-    # Rebuild population with remaining (surviving) deer after culling
+    # Rebuild population with remaining deer
     population = calves + hinds + stags
+
     return population
+
+
 
 
 def adjustMortalityRate(
@@ -240,17 +244,45 @@ def runSimulation(parameters: ModelParameters, huntingStrategy: HuntingParameter
     for i in range(samples):
         population = generateInitialPopulation()
 
+        print(f"Starting {len(population)}")
+
         for year in range(start_year, end_year + 1):
             # Annual processes: grow, reproduce, natural death, hunting
             population = grow(population)
+
+            print(f"After grow: {len(population)}")
+            print(f"Calves: {len(get_group(population, age=0))}")
+            print(f"{len([deer for deer in population if deer.age == 0])}")
+            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
+            print(f"{len([deer for deer in population if deer.age >= 1 and deer.isFemale])}")
+            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
+            print(f"{len([deer for deer in population if deer.age >= 1 and deer.isMale])}")
+
             population = reproduce(population, parameters)
+
+            print(f"After reproduce: {len(population)}")
+            print(f"Calves: {len(get_group(population, age=0))}")
+            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
+            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
+
             population = naturalDeath(population, parameters)
-            population = hunting(population, year, huntingStrategy)
+
+            print(f"After death: {len(population)}")
+            print(f"Calves: {len(get_group(population, age=0))}")
+            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
+            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
+
+            population = hunting(population, year, huntingStrategy, parameters)
+
+            print(f"After hunt: {len(population)}")
+            print(f"Calves: {len(get_group(population, age=0))}")
+            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
+            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
 
             # Collect statistics for the current population
             num_individuals = len(population)
-            num_stags = sum(1 for individual in population if individual.isMale and individual.age > 0)
-            num_hinds = sum(1 for individual in population if individual.isFemale and individual.age > 0)
+            num_stags = sum(1 for individual in population if individual.isMale and individual.age >= 1)
+            num_hinds = sum(1 for individual in population if individual.isFemale and individual.age >= 1)
             num_calves = sum(1 for individual in population if individual.age == 0)
             age_distribution = [individual.age for individual in population]
 

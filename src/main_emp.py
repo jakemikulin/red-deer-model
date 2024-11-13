@@ -99,6 +99,44 @@ def calculateAgeBasedMortality(age: int) -> float:
         return 0.03 + (0.05 / 14) * (age - 1)
     else:  # age >= 16
         return 0.08 * exp(2.47 * (age - 16))
+    
+def adjustMortalityRate(
+    base_mortality: float,
+    max_cap_impact: float,
+    cap_curve_slope: float,
+    inow: int,
+    imax: int,
+) -> float:
+    # Adjust the mortality rate based on carrying capacity
+    adjustment = (max_cap_impact / 2) * (1 + tanh(cap_curve_slope * (inow - imax)))
+    return base_mortality + adjustment
+
+
+def naturalDeath(population: List[Deer], params: ModelParameters):
+    survivors = []
+    inow = len(population)  # Current population size
+    imax = params.maximumIndividuals  # Maximum carrying capacity
+
+    for deer in population:
+        # Step 1: Calculate the age-based mortality rate using the provided formula
+        base_mortality = calculateAgeBasedMortality(deer.age)
+
+        # Step 2: Adjust mortality rate based on carrying capacity (Algorithm 3)
+        adjusted_mortality = adjustMortalityRate(
+            base_mortality,
+            params.maxCapacityImpact,
+            params.capacityCurveSlope,
+            inow,
+            imax,
+        )
+
+        # Step 3: Determine if the deer survives based on adjusted mortality rate
+        if random.random() >= adjusted_mortality:
+            survivors.append(
+                deer
+            )  # Deer survives if random number >= adjusted mortality
+
+    return survivors
 
 
 def get_group(population: List[Deer], age: int = None, min_age: int = None, onlyMale: bool = False, onlyFemale: bool = False):
@@ -149,46 +187,6 @@ def hunting(population: List[Deer], year: int, huntingStrategy: HuntingParameter
 
     return population
 
-
-
-
-def adjustMortalityRate(
-    base_mortality: float,
-    max_cap_impact: float,
-    cap_curve_slope: float,
-    inow: int,
-    imax: int,
-) -> float:
-    # Adjust the mortality rate based on carrying capacity
-    adjustment = (max_cap_impact / 2) * (1 + tanh(cap_curve_slope * (inow - imax)))
-    return base_mortality + adjustment
-
-
-def naturalDeath(population: List[Deer], params: ModelParameters):
-    survivors = []
-    inow = len(population)  # Current population size
-    imax = params.maximumIndividuals  # Maximum carrying capacity
-
-    for deer in population:
-        # Step 1: Calculate the age-based mortality rate using the provided formula
-        base_mortality = calculateAgeBasedMortality(deer.age)
-
-        # Step 2: Adjust mortality rate based on carrying capacity (Algorithm 3)
-        adjusted_mortality = adjustMortalityRate(
-            base_mortality,
-            params.maxCapacityImpact,
-            params.capacityCurveSlope,
-            inow,
-            imax,
-        )
-
-        # Step 3: Determine if the deer survives based on adjusted mortality rate
-        if random.random() >= adjusted_mortality:
-            survivors.append(
-                deer
-            )  # Deer survives if random number >= adjusted mortality
-
-    return survivors
 
 def generate_random_list(size, total):
     numbers = []

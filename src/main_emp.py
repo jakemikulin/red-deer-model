@@ -186,6 +186,16 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
 
     return survivors
 
+def generate_random_list(size, total):
+    numbers = []
+    current_sum = 0
+    for _ in range(size - 1):
+        remaining = total - current_sum
+        value = random.randint(0, min(10, remaining))
+        numbers.append(value)
+        current_sum += value
+    numbers.append(total - current_sum)
+    return numbers
 
 def generateInitialPopulation():
     """
@@ -198,16 +208,9 @@ def generateInitialPopulation():
     total_hinds = 4100
     total_calves = 4100
 
-    # Define age ranges and distribute non-calves across them
-    def random_age_distribution(total_count, min_age=1, max_age=16):
-        age_distribution = [random.randint(0, total_count // (max_age - min_age + 1)) for _ in range(min_age, max_age + 1)]
-        remaining = total_count - sum(age_distribution)
-        age_distribution[random.randint(0, len(age_distribution) - 1)] += remaining
-        return age_distribution
-
     # Generate age distributions for stags and hinds (ages 1-16)
-    stags_age_distribution = random_age_distribution(total_stags)
-    hinds_age_distribution = random_age_distribution(total_hinds)
+    stags_age_distribution = generate_random_list(16, total_stags)
+    hinds_age_distribution = generate_random_list(16, total_hinds)
 
     # Initialize the population list
     population: List[Deer] = []
@@ -227,7 +230,6 @@ def generateInitialPopulation():
     population.extend([Deer(0, False, True) for _ in range(total_calves // 2)])
 
     return population
-
 
 
 def runSimulation(parameters: ModelParameters, huntingStrategy: HuntingParameters, samples=100, start_year=2005, end_year=2018):

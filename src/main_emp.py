@@ -93,12 +93,13 @@ def calculateAgeBasedMortality(age: int) -> float:
     # Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
 
     if age == 0:
-        return 0.06 # From Blackmount DMP
+        return 0.06  # From Blackmount DMP
     elif 0 < age < 16:
-        return 0.04 + (0.03 / 14) * (age - 1) # 0.03 + (0.05 / 14) * (age - 1)
+        return 0.04 + (0.03 / 14) * (age - 1)  # 0.03 + (0.05 / 14) * (age - 1)
     else:  # age >= 16
-        return 0.06 * exp(2.0 * (age - 16)) # 0.08 * exp(2.47 * (age - 16))
-    
+        return 0.06 * exp(2.0 * (age - 16))  # 0.08 * exp(2.47 * (age - 16))
+
+
 def adjustMortalityRate(
     base_mortality: float,
     max_cap_impact: float,
@@ -138,7 +139,13 @@ def naturalDeath(population: List[Deer], params: ModelParameters):
     return survivors
 
 
-def get_group(population: List[Deer], age: int = None, min_age: int = None, onlyMale: bool = False, onlyFemale: bool = False):
+def get_group(
+    population: List[Deer],
+    age: int = None,
+    min_age: int = None,
+    onlyMale: bool = False,
+    onlyFemale: bool = False,
+):
     filtered_population = []
 
     for deer in population:
@@ -162,24 +169,39 @@ def get_group(population: List[Deer], age: int = None, min_age: int = None, only
     return filtered_population
 
 
-def hunting(population: List[Deer], year: int, huntingStrategy: HuntingParameters, params: ModelParameters):
+def hunting(
+    population: List[Deer],
+    year: int,
+    huntingStrategy: HuntingParameters,
+    params: ModelParameters,
+):
     # Retrieve cull data for the current year
-    year_cull = huntingStrategy.culling_data.get(year, {'calves': 0, 'matureHinds': 0, 'matureStags': 0})
+    year_cull = huntingStrategy.culling_data.get(
+        year, {"calves": 0, "matureHinds": 0, "matureStags": 0}
+    )
 
     # Cull calves
     calves = get_group(population, age=0)
-    calf_cull_count = min(year_cull['calves'], len(calves))  # Ensure we don't remove more than exist
-    calves = calves[calf_cull_count:]  # Keep only the remaining portion after removing the cull count
+    calf_cull_count = min(
+        year_cull["calves"], len(calves)
+    )  # Ensure we don't remove more than exist
+    calves = calves[
+        calf_cull_count:
+    ]  # Keep only the remaining portion after removing the cull count
 
     # Cull hinds
     hinds = get_group(population, min_age=1, onlyFemale=True)
-    hind_cull_count = min(year_cull['hinds'], len(hinds))
-    hinds = hinds[hind_cull_count:]  # Keep only the remaining portion after removing the cull count
+    hind_cull_count = min(year_cull["hinds"], len(hinds))
+    hinds = hinds[
+        hind_cull_count:
+    ]  # Keep only the remaining portion after removing the cull count
 
     # Cull stags
     stags = get_group(population, min_age=1, onlyMale=True)
-    stag_cull_count = min(year_cull['stags'], len(stags))
-    stags = stags[stag_cull_count:]  # Keep only the remaining portion after removing the cull count
+    stag_cull_count = min(year_cull["stags"], len(stags))
+    stags = stags[
+        stag_cull_count:
+    ]  # Keep only the remaining portion after removing the cull count
 
     # Rebuild population with remaining deer
     population = calves + hinds + stags
@@ -237,10 +259,24 @@ def generateInitialPopulation():
     return population
 
 
-def runSimulation(parameters: ModelParameters, huntingStrategy: HuntingParameters, samples=100, start_year=2005, end_year=2018):
-    population_df = pd.DataFrame(columns=[
-        "iteration", "year", "num_individuals", "num_stags", "num_hinds", "num_calves", "age_distribution"
-    ])
+def runSimulation(
+    parameters: ModelParameters,
+    huntingStrategy: HuntingParameters,
+    samples=100,
+    start_year=2005,
+    end_year=2018,
+):
+    population_df = pd.DataFrame(
+        columns=[
+            "iteration",
+            "year",
+            "num_individuals",
+            "num_stags",
+            "num_hinds",
+            "num_calves",
+            "age_distribution",
+        ]
+    )
 
     for i in range(samples):
         population = generateInitialPopulation()
@@ -282,25 +318,34 @@ def runSimulation(parameters: ModelParameters, huntingStrategy: HuntingParameter
 
             # Collect statistics for the current population
             num_individuals = len(population)
-            num_stags = sum(1 for individual in population if individual.isMale and individual.age >= 1)
-            num_hinds = sum(1 for individual in population if individual.isFemale and individual.age >= 1)
+            num_stags = sum(
+                1
+                for individual in population
+                if individual.isMale and individual.age >= 1
+            )
+            num_hinds = sum(
+                1
+                for individual in population
+                if individual.isFemale and individual.age >= 1
+            )
             num_calves = sum(1 for individual in population if individual.age == 0)
             age_distribution = [individual.age for individual in population]
 
-            year_data = pd.DataFrame({
-                "iteration": [i],
-                "year": [year],
-                "num_individuals": [num_individuals],
-                "num_stags": [num_stags],
-                "num_hinds": [num_hinds],
-                "num_calves": [num_calves],
-                "age_distribution": [age_distribution],
-            })
+            year_data = pd.DataFrame(
+                {
+                    "iteration": [i],
+                    "year": [year],
+                    "num_individuals": [num_individuals],
+                    "num_stags": [num_stags],
+                    "num_hinds": [num_hinds],
+                    "num_calves": [num_calves],
+                    "age_distribution": [age_distribution],
+                }
+            )
 
             population_df = pd.concat([population_df, year_data], ignore_index=True)
 
     return population_df
-
 
 
 def main():

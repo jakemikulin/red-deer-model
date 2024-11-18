@@ -25,6 +25,10 @@ class ModelParameters:
         huntingLimit: int,
         initialIndividuals: int,
         maximumIndividuals: int,
+        probMale: float = 0.52,
+        probFemale: float = 0.48,
+        probYoungReproduce: float = 0.1,
+        probMatureReproduce: float = 0.5,
     ):
         self.maxCapacityImpact = maxCapacityImpact  # c
         self.capacityCurveSlope = capacityCurveSlope  # a
@@ -32,10 +36,14 @@ class ModelParameters:
         self.initialIndividuals = initialIndividuals  # i_init
         self.maximumIndividuals = maximumIndividuals  # i_max
 
-        self.probMale = 0.52  # p_o,m
-        self.probFemale = 0.48  # p_o,f
-        self.probYoungReproduce = 0.1  # Reproduction function, page 18 was 0.3
-        self.probMatureReproduce = 0.5  # Reproduction function, page 18 was 0.9
+        self.probMale = probMale  # p_o,m
+        self.probFemale = probFemale  # p_o,f
+        self.probYoungReproduce = (
+            probYoungReproduce  # Reproduction function, page 18 was 0.3
+        )
+        self.probMatureReproduce = (
+            probMatureReproduce  # Reproduction function, page 18 was 0.9
+        )
 
 
 class HuntingParameters:
@@ -88,16 +96,18 @@ def reproduce(population: List[Deer], params: ModelParameters):
     return population + newDeer
 
 
-def calculateAgeBasedMortality(age: int) -> float:
+def calculateAgeBasedMortality(
+    age: int,
+) -> float:  # TODO: move some of these into model parameters
 
     # Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
 
     if age == 0:
         return 0.06  # From Blackmount DMP
     elif 0 < age < 16:
-        return 0.04 + (0.03 / 14) * (age - 1)  # 0.03 + (0.05 / 14) * (age - 1)
+        return 0.03 + (0.03 / 14) * (age - 1)  # 0.03 + (0.05 / 14) * (age - 1)
     else:  # age >= 16
-        return 0.06 * exp(2.0 * (age - 16))  # 0.08 * exp(2.47 * (age - 16))
+        return 0.08 * exp(2.0 * (age - 16))  # 0.08 * exp(2.47 * (age - 16))
 
 
 def adjustMortalityRate(
@@ -177,7 +187,7 @@ def hunting(
 ):
     # Retrieve cull data for the current year
     year_cull = huntingStrategy.culling_data.get(
-        year, {"calves": 0, "matureHinds": 0, "matureStags": 0}
+        year, {"calves": 0, "hinds": 0, "stags": 0}
     )
 
     # Cull calves
@@ -220,6 +230,7 @@ def generate_random_list(size, total):
     numbers.append(total - current_sum)
     return numbers
 
+
 def generateInitialPopulation():
     """
     Initializes the population based on empirical data for 2005:
@@ -232,8 +243,8 @@ def generateInitialPopulation():
     total_calves = 4100
 
     # Generate age distributions for stags and hinds (ages 1-15)
-    stags_age_distribution = generate_random_list(15, total_stags)
-    hinds_age_distribution = generate_random_list(15, total_hinds)
+    stags_age_distribution = [total_stags // 15] * 15
+    hinds_age_distribution = [total_hinds // 15] * 15
 
     # Initialize the population list
     population: List[Deer] = []
@@ -251,10 +262,6 @@ def generateInitialPopulation():
     # Add calves with age 0 (assuming a roughly equal male/female distribution)
     population.extend([Deer(0, True, False) for _ in range(total_calves // 2)])
     population.extend([Deer(0, False, True) for _ in range(total_calves // 2)])
-
-    # Debug: Check that all non-calves are within age range 1-15
-    ages = [deer.age for deer in population if deer.age > 0]
-    print(f"Initial non-calf ages: Min={min(ages)}, Max={max(ages)}")
 
     return population
 
@@ -281,42 +288,34 @@ def runSimulation(
     for i in range(samples):
         population = generateInitialPopulation()
 
-        print(f"Starting {len(population)}")
+        # print(f"Starting {len(population)}")
 
         for year in range(start_year, end_year + 1):
             # Annual processes: grow, reproduce, natural death, hunting
+
             population = grow(population)
-
-            print(f"After grow: {len(population)}")
-            print(f"Calves: {len(get_group(population, age=0))}")
-            print(f"{len([deer for deer in population if deer.age == 0])}")
-            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
-            print(f"{len([deer for deer in population if deer.age >= 1 and deer.isFemale])}")
-            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
-            print(f"{len([deer for deer in population if deer.age >= 1 and deer.isMale])}")
-
             population = reproduce(population, parameters)
 
-            print(f"After reproduce: {len(population)}")
-            print(f"Calves: {len(get_group(population, age=0))}")
-            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
-            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
-
+            num_calves_before, num_stags_before, num_hinds_before = count_population(
+                population
+            )
             population = naturalDeath(population, parameters)
-
-            print(f"After death: {len(population)}")
-            print(f"Calves: {len(get_group(population, age=0))}")
-            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
-            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
+            num_calves_after, num_stags_after, num_hinds_after = count_population(
+                population
+            )
+            percent_calves_died, percent_stags_died, percent_hinds_died = (
+                calculate_death_percentages(
+                    num_calves_before,
+                    num_stags_before,
+                    num_hinds_before,
+                    num_calves_after,
+                    num_stags_after,
+                    num_hinds_after,
+                )
+            )
 
             population = hunting(population, year, huntingStrategy, parameters)
 
-            print(f"After hunt: {len(population)}")
-            print(f"Calves: {len(get_group(population, age=0))}")
-            print(f"Hinds: {len(get_group(population, min_age=1, onlyFemale=True))}")
-            print(f"Stags: {len(get_group(population, min_age=1, onlyMale=True))}")
-
-            # Collect statistics for the current population
             num_individuals = len(population)
             num_stags = sum(
                 1
@@ -330,6 +329,9 @@ def runSimulation(
             )
             num_calves = sum(1 for individual in population if individual.age == 0)
             age_distribution = [individual.age for individual in population]
+            average_age = (
+                sum(age_distribution) / len(age_distribution) if age_distribution else 0
+            )
 
             year_data = pd.DataFrame(
                 {
@@ -340,12 +342,55 @@ def runSimulation(
                     "num_hinds": [num_hinds],
                     "num_calves": [num_calves],
                     "age_distribution": [age_distribution],
+                    "calves_died_percentage": [percent_calves_died],
+                    "stags_died_percentage": [percent_stags_died],
+                    "hinds_died_percentage": [percent_hinds_died],
+                    "avg_age": [average_age],
                 }
             )
 
             population_df = pd.concat([population_df, year_data], ignore_index=True)
 
     return population_df
+
+
+def calculate_death_percentages(
+    num_calves_before,
+    num_stags_before,
+    num_hinds_before,
+    num_calves_after,
+    num_stags_after,
+    num_hinds_after,
+):
+    percent_calves_died = (
+        ((num_calves_before - num_calves_after) / num_calves_before) * 100
+        if num_calves_before > 0
+        else 0
+    )
+    percent_stags_died = (
+        ((num_stags_before - num_stags_after) / num_stags_before) * 100
+        if num_stags_before > 0
+        else 0
+    )
+    percent_hinds_died = (
+        ((num_hinds_before - num_hinds_after) / num_hinds_before) * 100
+        if num_hinds_before > 0
+        else 0
+    )
+
+    return percent_calves_died, percent_stags_died, percent_hinds_died
+
+
+def count_population(population):
+    num_calves_before = sum(1 for individual in population if individual.age == 0)
+    num_stags_before = sum(
+        1 for individual in population if individual.isMale and individual.age >= 1
+    )
+    num_hinds_before = sum(
+        1 for individual in population if individual.isFemale and individual.age >= 1
+    )
+
+    return num_calves_before, num_stags_before, num_hinds_before
 
 
 def main():

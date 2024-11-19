@@ -79,14 +79,14 @@ def reproduce(population: List[Deer], params: ModelParameters):
         if not deer.isFemale:
             continue
 
-        if deer.age == 1:
+        if deer.age == 1 or deer.age == 2:
             if random.random() < params.probYoungReproduce:
                 male = False
                 if random.random() < params.probMale:
                     male = True
                 newDeer.append(Deer(0, not male, male))
 
-        elif 1 < deer.age < 12:
+        elif 2 < deer.age < 12:
             if random.random() < params.probMatureReproduce:
                 male = False
                 if random.random() < params.probMale:
@@ -102,10 +102,10 @@ def calculateAgeBasedMortality(
 
     # Calculates the mortality rate (p_{i,d}) based on age (i_a) using the provided formula.
 
-    if age == 0:
+    if 0 <= age <= 2:
         return 0.06  # From Blackmount DMP 6% calf mortality
-    elif 0 < age < 16:
-        return 0.03 + (0.03 / 14) * (age - 1)  # 0.03 + (0.05 / 14) * (age - 1)
+    elif 2 < age < 16:
+        return 0.02 + (0.03 / 14) * (age - 1)  # 0.03 + (0.05 / 14) * (age - 1)
     else:  # age >= 16
         return 0.08 * exp(2.0 * (age - 16))  # 0.08 * exp(2.47 * (age - 16))
 
@@ -153,6 +153,7 @@ def get_group(
     population: List[Deer],
     age: int = None,
     min_age: int = None,
+    max_age: int = None,
     onlyMale: bool = False,
     onlyFemale: bool = False,
 ):
@@ -165,6 +166,10 @@ def get_group(
 
         # Filter by minimum age (inclusive), if provided
         if min_age is not None and deer.age < min_age:
+            continue
+
+        # Filter by maximum age (inclusive), if provided
+        if max_age is not None and deer.age > max_age:
             continue
 
         # Filter by sex
@@ -191,7 +196,7 @@ def hunting(
     )
 
     # Cull calves
-    calves = get_group(population, age=0)
+    calves = get_group(population, min_age=0, max_age=2)
     calf_cull_count = min(
         year_cull["calves"], len(calves)
     )  # Ensure we don't remove more than exist
@@ -200,14 +205,14 @@ def hunting(
     ]  # Keep only the remaining portion after removing the cull count
 
     # Cull hinds
-    hinds = get_group(population, min_age=1, onlyFemale=True)
+    hinds = get_group(population, min_age=3, onlyFemale=True)
     hind_cull_count = min(year_cull["hinds"], len(hinds))
     hinds = hinds[
         hind_cull_count:
     ]  # Keep only the remaining portion after removing the cull count
 
     # Cull stags
-    stags = get_group(population, min_age=1, onlyMale=True)
+    stags = get_group(population, min_age=3, onlyMale=True)
     stag_cull_count = min(year_cull["stags"], len(stags))
     stags = stags[
         stag_cull_count:
@@ -238,30 +243,33 @@ def generateInitialPopulation():
     Distributes non-calves (stags and hinds) across ages 1-16 randomly,
     while calves are set to age 0.
     """
-    total_stags = 2000
-    total_hinds = 4100
-    total_calves = 4100
+    total_stags = 1800
+    total_hinds = 3700
+    total_calves = 3700
 
-    # Generate age distributions for stags and hinds (ages 1-15)
-    stags_age_distribution = [total_stags // 15] * 15
-    hinds_age_distribution = [total_hinds // 15] * 15
+    # Generate age distributions for stags and hinds (ages 3-15)
+    stags_age_distribution = [total_stags // 13] * 13
+    hinds_age_distribution = [total_hinds // 13] * 13
 
     # Initialize the population list
     population: List[Deer] = []
 
-    # Add stags distributed randomly across ages 1-16
-    for age, count in enumerate(stags_age_distribution, start=1):
+    # Add stags distributed randomly across ages 3-16
+    for age, count in enumerate(stags_age_distribution, start=3):
         for _ in range(count):
             population.append(Deer(age, False, True))
 
-    # Add hinds distributed randomly across ages 1-16
-    for age, count in enumerate(hinds_age_distribution, start=1):
+    # Add hinds distributed randomly across ages 3-16
+    for age, count in enumerate(hinds_age_distribution, start=3):
         for _ in range(count):
             population.append(Deer(age, True, False))
 
-    # Add calves with age 0 (assuming a roughly equal male/female distribution)
-    population.extend([Deer(0, True, False) for _ in range(total_calves // 2)])
-    population.extend([Deer(0, False, True) for _ in range(total_calves // 2)])
+    # Add calves distributed across ages 0, 1, 2 (e.g., equally)
+    for age in range(3):  # Ages 0, 1, 2
+        for _ in range(total_calves // 6):  # Divide equally between male/female and ages
+            population.append(Deer(age, True, False))  # Female calves
+            population.append(Deer(age, False, True))  # Male calves
+
 
     return population
 
@@ -294,7 +302,9 @@ def runSimulation(
             # Annual processes: grow, reproduce, natural death, hunting
 
             population = grow(population)
+            print(f"Year {year}: {len(population)}")
             population = reproduce(population, parameters)
+            print(f"Year {year}: {len(population)}")
 
             num_calves_before, num_stags_before, num_hinds_before = count_population(
                 population
@@ -314,20 +324,24 @@ def runSimulation(
                 )
             )
 
+            print(f"Year {year}: {len(population)}")
+
             population = hunting(population, year, huntingStrategy, parameters)
+
+            print(f"Year {year}: {len(population)}")
 
             num_individuals = len(population)
             num_stags = sum(
                 1
                 for individual in population
-                if individual.isMale and individual.age >= 1
+                if individual.isMale and individual.age >= 3
             )
             num_hinds = sum(
                 1
                 for individual in population
-                if individual.isFemale and individual.age >= 1
+                if individual.isFemale and individual.age >= 3
             )
-            num_calves = sum(1 for individual in population if individual.age == 0)
+            num_calves = sum(1 for individual in population if individual.age <= 2)
             age_distribution = [individual.age for individual in population]
             average_age = (
                 sum(age_distribution) / len(age_distribution) if age_distribution else 0 # TODO this includes 40% being age 0 calves
@@ -382,12 +396,12 @@ def calculate_death_percentages(
 
 
 def count_population(population):
-    num_calves_before = sum(1 for individual in population if individual.age == 0)
+    num_calves_before = sum(1 for individual in population if individual.age <= 2)
     num_stags_before = sum(
-        1 for individual in population if individual.isMale and individual.age >= 1
+        1 for individual in population if individual.isMale and individual.age >= 3
     )
     num_hinds_before = sum(
-        1 for individual in population if individual.isFemale and individual.age >= 1
+        1 for individual in population if individual.isFemale and individual.age >= 3
     )
 
     return num_calves_before, num_stags_before, num_hinds_before

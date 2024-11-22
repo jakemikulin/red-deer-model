@@ -266,10 +266,11 @@ def generateInitialPopulation():
 
     # Add calves distributed across ages 0, 1, 2 (e.g., equally)
     for age in range(3):  # Ages 0, 1, 2
-        for _ in range(total_calves // 6):  # Divide equally between male/female and ages
+        for _ in range(
+            total_calves // 6
+        ):  # Divide equally between male/female and ages
             population.append(Deer(age, True, False))  # Female calves
             population.append(Deer(age, False, True))  # Male calves
-
 
     return population
 
@@ -302,9 +303,9 @@ def runSimulation(
             # Annual processes: grow, reproduce, natural death, hunting
 
             population = grow(population)
-            print(f"Year {year}: {len(population)}")
+            # print(f"Year {year}: {len(population)}")
             population = reproduce(population, parameters)
-            print(f"Year {year}: {len(population)}")
+            # print(f"Year {year}: {len(population)}")
 
             num_calves_before, num_stags_before, num_hinds_before = count_population(
                 population
@@ -324,11 +325,11 @@ def runSimulation(
                 )
             )
 
-            print(f"Year {year}: {len(population)}")
+            # print(f"Year {year}: {len(population)}")
 
             population = hunting(population, year, huntingStrategy, parameters)
 
-            print(f"Year {year}: {len(population)}")
+            # print(f"Year {year}: {len(population)}")
 
             num_individuals = len(population)
             num_stags = sum(
@@ -344,7 +345,9 @@ def runSimulation(
             num_calves = sum(1 for individual in population if individual.age <= 2)
             age_distribution = [individual.age for individual in population]
             average_age = (
-                sum(age_distribution) / len(age_distribution) if age_distribution else 0 # TODO this includes 40% being age 0 calves
+                sum(age_distribution) / len(age_distribution)
+                if age_distribution
+                else 0  # TODO this includes 40% being age 0 calves
             )
 
             year_data = pd.DataFrame(

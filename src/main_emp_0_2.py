@@ -197,26 +197,36 @@ def hunting(
 
     # Cull calves
     calves = get_group(population, min_age=0, max_age=2)
-    calf_cull_count = min(
-        year_cull["calves"], len(calves)
-    )  # Ensure we don't remove more than exist
-    calves = calves[
-        calf_cull_count:
-    ]  # Keep only the remaining portion after removing the cull count
+    if len(calves) > params.huntingLimit:
+        calf_cull_count = min(
+            year_cull["calves"],
+            len(calves),
+        )  # Ensure we don't remove more than exist
+        calves = calves[
+            calf_cull_count:
+        ]  # Keep only the remaining portion after removing the cull count
 
     # Cull hinds
     hinds = get_group(population, min_age=3, onlyFemale=True)
-    hind_cull_count = min(year_cull["hinds"], len(hinds))
-    hinds = hinds[
-        hind_cull_count:
-    ]  # Keep only the remaining portion after removing the cull count
+    if len(hinds) > params.huntingLimit:
+        hind_cull_count = min(
+            year_cull["hinds"],
+            len(hinds),
+        )
+        hinds = hinds[
+            hind_cull_count:
+        ]  # Keep only the remaining portion after removing the cull count
 
     # Cull stags
     stags = get_group(population, min_age=3, onlyMale=True)
-    stag_cull_count = min(year_cull["stags"], len(stags))
-    stags = stags[
-        stag_cull_count:
-    ]  # Keep only the remaining portion after removing the cull count
+    if len(stags) > params.huntingLimit:
+        stag_cull_count = min(
+            year_cull["stags"],
+            len(stags),
+        )
+        stags = stags[
+            stag_cull_count:
+        ]  # Keep only the remaining portion after removing the cull count
 
     # Rebuild population with remaining deer
     population = calves + hinds + stags

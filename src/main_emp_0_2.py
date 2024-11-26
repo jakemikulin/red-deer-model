@@ -23,7 +23,6 @@ class ModelParameters:
         maxCapacityImpact: float,
         capacityCurveSlope: float,
         huntingLimit: int,
-        initialIndividuals: int,
         maximumIndividuals: int,
         probMale: float = 0.52,
         probFemale: float = 0.48,
@@ -33,7 +32,6 @@ class ModelParameters:
         self.maxCapacityImpact = maxCapacityImpact  # c
         self.capacityCurveSlope = capacityCurveSlope  # a
         self.huntingLimit = huntingLimit  # l
-        self.initialIndividuals = initialIndividuals  # i_init
         self.maximumIndividuals = maximumIndividuals  # i_max
 
         self.probMale = probMale  # p_o,m

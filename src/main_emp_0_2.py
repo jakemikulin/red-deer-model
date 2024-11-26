@@ -246,16 +246,15 @@ def generate_random_list(size, total):
     return numbers
 
 
-def generateInitialPopulation():
+def generateInitialPopulation(
+    total_stags=1800,
+    total_hinds=3700,
+    total_calves=3700,
+):
     """
-    Initializes the population based on empirical data for 2005:
-    2000 stags, 4100 hinds, and 4100 calves.
     Distributes non-calves (stags and hinds) across ages 1-16 randomly,
     while calves are set to age 0.
     """
-    total_stags = 1800
-    total_hinds = 3700
-    total_calves = 3700
 
     # Generate age distributions for stags and hinds (ages 3-15)
     stags_age_distribution = [total_stags // 13] * 13
@@ -288,6 +287,9 @@ def generateInitialPopulation():
 def runSimulation(
     parameters: ModelParameters,
     huntingStrategy: HuntingParameters,
+    initial_stags=1800,
+    initial_hinds=3700,
+    initial_calves=3700,
     samples=100,
     start_year=2005,
     end_year=2018,
@@ -305,7 +307,11 @@ def runSimulation(
     )
 
     for i in range(samples):
-        population = generateInitialPopulation()
+        population = generateInitialPopulation(
+            initial_stags,
+            initial_hinds,
+            initial_calves,
+        )
 
         # print(f"Starting {len(population)}")
 

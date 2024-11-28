@@ -1,8 +1,20 @@
-# red-deer-model
+# Agent Based Model For Red Deer Management
 
-MoSS Coursework 2
+This repository contains an agent based model implemented for MoSS (Modelling of Systems for Sustainability) Coursework 2 at the University of Edinburgh.
 
-Blackmount Deer Management Group (updated 2019)
+The model is based on this [master's thesis](https://bora.uib.no/bora-xmlui/handle/1956/20034).
+
+## How To Use
+
+`src/main.py` aims to implement exactly the model found in the source paper. `reproduce_results.ipynb` runs the model and visualises the results.
+
+`src/main_v2.py` extends the model to enable real-world culling data to be used in the model. `blackmount.ipynb` contains code for running the model and visualising it against data from the Black Mount deer management group (linked below).
+
+`blackmount_desired_density.ipynb` includes experiments to determine an appropriate culling strategy to get the population below the desired density of 4 per square kilometre required for natural regeneration of trees and other plant life to occur.
+
+## Blackmount Deer Management Group (updated 2019)
+
+[Blackmount DMG](https://blackmountdmg.deer-management.co.uk/deer-management-plan/)
 
 --- Theses are estimated based off of two terrible 3D graphs ---
 
@@ -35,25 +47,3 @@ Blackmount Deer Management Group (updated 2019)
 | 2016 | 490   | 610   | 290    | 1390  |
 | 2017 | 600   | 830   | 400    | 1830  |
 | 2018 | 580   | 520   | 200    | 1300  |
-
-## Desired population density
-
-_Note: will want to reproduce this section somewhere in the report_
-_TODO: get a reference for the <1 /km^2 statistic_
-
-The desired population density to enable natural regeneration without deer fencing is <1 individual per square kilometer (<1 per 100Hectares). The Blackmount DMG has a total area of ~91,000 hectares (910 km^2), with the latest count having ~8500 deer, or ~9/km^2. The desired population is <910 deer.
-
-We can use the model to answer the following questions:
-
-1. How long would it take for the population to get down to this level at current culling levels?
-2. What culling strategy would be required to get to this level over 10 years?
-3. What culling strategy would be required to keep the population stable at this level?
-
-Naïve approach:
-
-- Culling strategy as a set number of individuals each year
-
-More sophisticated approach:
-
-- Culling strategy as a % of individuals each year
-- This is probably more useful since it will get increasingly difficult to harvest the same number of individuals

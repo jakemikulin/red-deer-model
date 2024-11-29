@@ -215,9 +215,6 @@ def generateInitialPopulation():
     stags = [5, 4, 3, 0, 4, 9, 0, 3, 3, 5, 1, 7, 0, 3, 3]
     hinds = [9, 4, 2, 3, 5, 1, 2, 4, 1, 1, 3, 4, 2, 1, 6, 2]
 
-    stags = generate_random_list(15, 100)
-    hinds = generate_random_list(15, 100)
-
     population: List[Deer] = []
 
     for age, count in enumerate(stags):
@@ -234,7 +231,7 @@ def runSimulation(
     parameters: ModelParameters,
     huntingStrategy: HuntingParameters,
     samples=100,
-    years=100,
+    years=101,
 ):
 
     population_df = pd.DataFrame(
